@@ -530,61 +530,39 @@
       console.log('AiCareXpert: Assistant ID:', widgetConfig.assistantId);
       console.log('AiCareXpert: Supabase Key available:', !!widgetConfig.supabaseAnonKey);
       
-      // Use the exact same headers that worked in our direct test
+      // Build headers - Authorization is REQUIRED based on our tests
+      if (!widgetConfig.supabaseAnonKey) {
+        throw new Error('Supabase anon key is required for authentication');
+      }
+      
       const headers = {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${widgetConfig.supabaseAnonKey}`,
-        'apikey': widgetConfig.supabaseAnonKey
+        'Authorization': `Bearer ${widgetConfig.supabaseAnonKey}`
       };
       
       console.log('AiCareXpert: Using headers:', headers);
       
-      const response = await fetch(widgetConfig.apiUrl, {
-        method: 'POST',
-        headers: headers,
-        body: JSON.stringify({
-          message: message,
-          tenantId: widgetConfig.tenantId,
-          assistantId: widgetConfig.assistantId,
-          sessionId: sessionId,
-          userId: userId
-        })
-      });
-
-      console.log('AiCareXpert: API response status:', response.status);
-      console.log('AiCareXpert: API response headers:', [...response.headers.entries()]);
-
-      hideTyping();
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log('AiCareXpert: API response data:', data);
-        
-        // Update session info
-      };
-
-      // Always add these headers - they're required for Supabase
-      if (widgetConfig.supabaseAnonKey) {
-      
       const requestBody = {
         message: message,
-        console.error('AiCareXpert: API error details:');
-        console.error('Status:', response.status);
-        console.error('Status Text:', response.statusText);
-        console.error('Error Body:', errorText);
-        console.error('Request Headers:', headers);
+        tenantId: widgetConfig.tenantId,
         assistantId: widgetConfig.assistantId,
         sessionId: sessionId,
         userId: userId
       };
       
       console.log('AiCareXpert: Request body:', requestBody);
-        headers['Authorization'] = `Bearer ${widgetConfig.supabaseAnonKey}`;
-        headers['apikey'] = widgetConfig.supabaseAnonKey;
-      }
-    } catch (error) {
+      
+      const response = await fetch(widgetConfig.apiUrl, {
+        method: 'POST',
+        headers: headers,
         body: JSON.stringify(requestBody)
-  }
+      });
 
+      console.log('AiCareXpert: API response status:', response.status);
+
+      hideTyping();
+
+      if (response.ok) {
+        const data = await response.json();
   console.log('AiCareXpert: Widget script loaded successfully');
 })();
