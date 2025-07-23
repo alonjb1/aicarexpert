@@ -66,7 +66,12 @@
 
     console.log('AiCareXpert: Widget initialized successfully');
     
-    // Add test functions directly to the global object
+    // Add test functions after initialization
+    addTestFunctions();
+  };
+
+  // Add test functions to global object
+  function addTestFunctions() {
     console.log('AiCareXpert: Adding test functions...');
     
     // Test function for debugging
@@ -95,8 +100,9 @@
       return widgetConfig;
     };
     
-    console.log('AiCareXpert: Test functions added. Available methods:', Object.keys(window.AiCareXpert));
-  };
+    console.log('AiCareXpert: Test functions added successfully');
+    console.log('AiCareXpert: Available methods after adding functions:', Object.keys(window.AiCareXpert));
+  }
 
   // Get or create user ID from localStorage
   function getOrCreateUserId() {
