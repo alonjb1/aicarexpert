@@ -1,40 +1,41 @@
 /**
  * AiCareXpert Widget - Healthcare AI Chatbot
- * Version 2.3 - Simplified global function assignment
+ * Version 2.4 - Direct global assignment fix
  */
 
 (function() {
   'use strict';
 
-  // Widget namespace - IMMEDIATELY assign functions
-  window.AiCareXpert = {
-    // Add functions immediately to global scope
-    sendTestMessage: function(message) {
-      console.log('AiCareXpert: Test function called with message:', message);
-      if (!this.config) {
-        console.error('AiCareXpert: Widget not initialized');
-        return;
-      }
-      
-      // Open widget if closed
-      const widget = document.getElementById('aicarexpert-window');
-      if (widget && !widget.classList.contains('open')) {
-        widget.classList.add('open');
-      }
-      
-      // Set input value and send
-      const input = document.getElementById('aicarexpert-input');
-      if (input) {
-        input.value = message || 'Test message from debug function';
-        sendMessage();
-      }
-    },
+  // Create global object first
+  window.AiCareXpert = {};
+  
+  // Add functions directly to global object
+  window.AiCareXpert.sendTestMessage = function(message) {
+    console.log('AiCareXpert: Test function called with message:', message);
+    if (!window.AiCareXpert.config) {
+      console.error('AiCareXpert: Widget not initialized');
+      return;
+    }
+    
+    // Open widget if closed
+    const widget = document.getElementById('aicarexpert-window');
+    if (widget && !widget.classList.contains('open')) {
+      widget.classList.add('open');
+    }
+    
+    // Set input value and send
+    const input = document.getElementById('aicarexpert-input');
+    if (input) {
+      input.value = message || 'Test message from debug function';
+      sendMessage();
+    }
+  };
 
-    getConfig: function() {
-      return this.config || {};
-    },
+  window.AiCareXpert.getConfig = function() {
+    return window.AiCareXpert.config || {};
+  };
 
-    init: function(config) {
+  window.AiCareXpert.init = function(config) {
       console.log('AiCareXpert: Initializing widget with config:', config);
       
       if (!config.tenantId || !config.assistantId || !config.apiUrl) {
@@ -48,7 +49,7 @@
       }
 
       // Store config globally
-      this.config = {
+      window.AiCareXpert.config = {
         tenantId: config.tenantId,
         assistantId: config.assistantId,
         apiUrl: config.apiUrl,
@@ -73,24 +74,25 @@
       };
 
       // Generate unique user ID for this visitor
-      this.userId = getOrCreateUserId();
-      this.sessionId = null;
-      this.isOpen = false;
-      this.messages = [];
+      window.AiCareXpert.userId = getOrCreateUserId();
+      window.AiCareXpert.sessionId = null;
+      window.AiCareXpert.isOpen = false;
+      window.AiCareXpert.messages = [];
       
       // Create widget HTML
       createWidget();
       
       // Auto-open if configured
-      if (this.config.config.autoOpen) {
+      if (window.AiCareXpert.config.config.autoOpen) {
         setTimeout(() => openWidget(), 1000);
       }
 
       console.log('AiCareXpert: Widget initialized successfully');
       console.log('AiCareXpert: Test functions should now be available');
-    }
-  };
+    };
 
+  console.log('AiCareXpert: Functions assigned to global object');
+  console.log('AiCareXpert: Available functions:', Object.keys(window.AiCareXpert));
   // Get or create user ID from localStorage
   function getOrCreateUserId() {
     const storageKey = 'aicarexpert_user_id';
