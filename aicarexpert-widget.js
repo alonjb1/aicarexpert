@@ -526,16 +526,14 @@
     try {
       console.log('AiCareXpert: Sending message to API...');
       
-      // Prepare headers
+      // Prepare headers with authentication
       const headers = {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${widgetConfig.supabaseAnonKey}`,
+        'apikey': widgetConfig.supabaseAnonKey
       };
       
-      // Add authentication headers if available
-      if (widgetConfig.supabaseAnonKey) {
-        headers['Authorization'] = `Bearer ${widgetConfig.supabaseAnonKey}`;
-        headers['apikey'] = widgetConfig.supabaseAnonKey;
-      }
+      console.log('AiCareXpert: Using headers:', headers);
       
       const response = await fetch(widgetConfig.apiUrl, {
         method: 'POST',
