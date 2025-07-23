@@ -1,42 +1,62 @@
-console.log('=== WIDGET DEBUG START ===');
+console.log('=== PROTECTED WIDGET v1.0 ===');
 
-// Step 1: Check if object already exists
-if (window.AiCareXpert) {
-  console.log('WARNING: AiCareXpert already exists:', Object.keys(window.AiCareXpert));
-} else {
-  console.log('AiCareXpert does not exist yet - good');
-}
+// Step 1: Check what exists
+console.log('BEFORE: window.AiCareXpert =', window.AiCareXpert);
 
-// Step 2: Create object with functions
-window.AiCareXpert = {
-  sendTestMessage: function(msg) {
-    alert('TEST MESSAGE: ' + msg);
-  },
+// Step 2: Create protected object that can't be overwritten
+(function() {
+  'use strict';
   
-  getConfig: function() {
-    return { test: 'working', timestamp: Date.now() };
-  },
+  // Create the object
+  const widgetObject = {
+    sendTestMessage: function(message) {
+      console.log('sendTestMessage called with:', message);
+      alert('TEST MESSAGE WORKS: ' + message);
+    },
+    
+    getConfig: function() {
+      console.log('getConfig called');
+      return { test: 'working', protected: true };
+    },
+    
+    init: function(config) {
+      console.log('init called with config:', config);
+      alert('INIT WORKS');
+    }
+  };
   
-  init: function(config) {
-    alert('INIT CALLED WITH CONFIG');
-  }
-};
+  // Step 3: Use Object.defineProperty to make it non-configurable
+  Object.defineProperty(window, 'AiCareXpert', {
+    value: widgetObject,
+    writable: false,
+    configurable: false,
+    enumerable: true
+  });
+  
+  console.log('PROTECTED OBJECT ASSIGNED');
+  console.log('Functions available:', Object.keys(window.AiCareXpert));
+  console.log('sendTestMessage type:', typeof window.AiCareXpert.sendTestMessage);
+  
+})();
 
-console.log('IMMEDIATELY AFTER ASSIGNMENT:');
+// Step 4: Verify immediately
+console.log('IMMEDIATE CHECK:');
 console.log('- Object exists:', !!window.AiCareXpert);
-console.log('- Keys:', Object.keys(window.AiCareXpert));
-console.log('- sendTestMessage type:', typeof window.AiCareXpert.sendTestMessage);
+console.log('- sendTestMessage exists:', !!window.AiCareXpert.sendTestMessage);
+console.log('- getConfig exists:', !!window.AiCareXpert.getConfig);
 
-// Step 3: Set up monitoring to catch overwrites
+// Step 5: Monitor for overwrites
 let checkCount = 0;
 const monitor = setInterval(() => {
   checkCount++;
-  console.log(`CHECK ${checkCount}: Keys = ${Object.keys(window.AiCareXpert).join(',')}`);
+  console.log(`MONITOR ${checkCount}:`);
+  console.log('- sendTestMessage exists:', !!window.AiCareXpert.sendTestMessage);
+  console.log('- getConfig exists:', !!window.AiCareXpert.getConfig);
   
-  if (checkCount >= 10) {
+  if (checkCount >= 5) {
     clearInterval(monitor);
-    console.log('=== MONITORING STOPPED ===');
+    console.log('=== MONITORING COMPLETE ===');
   }
-}, 500);
+}, 1000);
 
-console.log('=== WIDGET DEBUG END ===');
+console.log('=== PROTECTED WIDGET LOADED ===');
