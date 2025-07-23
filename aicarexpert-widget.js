@@ -1,59 +1,24 @@
-/**
- * AiCareXpert Widget - Simplest Possible Version
- */
+console.log('ULTRA SIMPLE WIDGET LOADING...');
 
-console.log('AiCareXpert: Widget loading...');
+// Step 1: Create empty object
+window.AiCareXpert = {};
 
-// Create the object and assign functions immediately
-window.AiCareXpert = {
-  sendTestMessage: function(message) {
-    console.log('sendTestMessage called with:', message);
-    alert('Test message: ' + (message || 'Hello!'));
-  },
-  
-  getConfig: function() {
-    console.log('getConfig called');
-    return this.config || { status: 'not initialized' };
-  },
-  
-  init: function(config) {
-    console.log('init called with:', config);
-    this.config = config;
-    this.createWidget(config);
-  },
-  
-  createWidget: function(config) {
-    console.log('Creating widget...');
-    
-    const widget = document.createElement('div');
-    widget.id = 'aicarexpert-widget';
-    widget.style.cssText = `
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      z-index: 999999;
-    `;
-    
-    widget.innerHTML = `
-      <button style="
-        width: 60px;
-        height: 60px;
-        background: #2563EB;
-        border: none;
-        border-radius: 50%;
-        cursor: pointer;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        color: white;
-        font-size: 24px;
-      " onclick="alert('Widget clicked!')">
-        💬
-      </button>
-    `;
-    
-    document.body.appendChild(widget);
-    console.log('Widget created successfully');
-  }
+// Step 2: Add one function at a time
+window.AiCareXpert.sendTestMessage = function(msg) {
+  alert('TEST: ' + msg);
 };
 
-console.log('AiCareXpert: Object created with functions:', Object.keys(window.AiCareXpert));
-console.log('AiCareXpert: Widget ready!');
+window.AiCareXpert.getConfig = function() {
+  return { test: 'working' };
+};
+
+window.AiCareXpert.init = function(config) {
+  alert('INIT CALLED');
+};
+
+// Step 3: Log what we have
+console.log('WIDGET OBJECT KEYS:', Object.keys(window.AiCareXpert));
+console.log('sendTestMessage TYPE:', typeof window.AiCareXpert.sendTestMessage);
+console.log('getConfig TYPE:', typeof window.AiCareXpert.getConfig);
+
+console.log('ULTRA SIMPLE WIDGET READY!');
