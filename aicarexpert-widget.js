@@ -592,5 +592,22 @@
     }
   }
 
+  // Test function for debugging
+  window.AiCareXpert.sendTestMessage = function(message) {
+    console.log('AiCareXpert: Test function called with message:', message);
+    if (!widgetConfig.apiUrl) {
+      console.error('AiCareXpert: Widget not properly initialized');
+      return;
+    }
+    
+    // Simulate sending a message
+    sendMessage();
+  };
+
+  // Debug function to get current config
+  window.AiCareXpert.getConfig = function() {
+    return widgetConfig;
+  };
+
   console.log('AiCareXpert: Widget script loaded successfully');
 })();
