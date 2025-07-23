@@ -525,8 +525,12 @@
 
     try {
       console.log('AiCareXpert: Sending message to API...');
+      console.log('AiCareXpert: API URL:', widgetConfig.apiUrl);
+      console.log('AiCareXpert: Tenant ID:', widgetConfig.tenantId);
+      console.log('AiCareXpert: Assistant ID:', widgetConfig.assistantId);
+      console.log('AiCareXpert: Supabase Key available:', !!widgetConfig.supabaseAnonKey);
       
-      // Prepare headers with authentication
+      // Use the exact same headers that worked in our direct test
       const headers = {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${widgetConfig.supabaseAnonKey}`,
@@ -548,6 +552,7 @@
       });
 
       console.log('AiCareXpert: API response status:', response.status);
+      console.log('AiCareXpert: API response headers:', [...response.headers.entries()]);
 
       hideTyping();
 
@@ -556,24 +561,29 @@
         console.log('AiCareXpert: API response data:', data);
         
         // Update session info
-        if (data.sessionId) sessionId = data.sessionId;
-        if (data.userId) userId = data.userId;
-        
-        // Add assistant response
-        addMessage(data.response, 'assistant');
-      } else {
-        const errorText = await response.text();
-        console.error('AiCareXpert: API error:', response.status, errorText);
-        addMessage('Sorry, I encountered an error. Please try again.', 'assistant');
+      };
+
+      // Always add these headers - they're required for Supabase
+      if (widgetConfig.supabaseAnonKey) {
+      
+      const requestBody = {
+        message: message,
+        console.error('AiCareXpert: API error details:');
+        console.error('Status:', response.status);
+        console.error('Status Text:', response.statusText);
+        console.error('Error Body:', errorText);
+        console.error('Request Headers:', headers);
+        assistantId: widgetConfig.assistantId,
+        sessionId: sessionId,
+        userId: userId
+      };
+      
+      console.log('AiCareXpert: Request body:', requestBody);
+        headers['Authorization'] = `Bearer ${widgetConfig.supabaseAnonKey}`;
+        headers['apikey'] = widgetConfig.supabaseAnonKey;
       }
     } catch (error) {
-      console.error('AiCareXpert: Network error:', error);
-      hideTyping();
-      addMessage('Sorry, I encountered a network error. Please try again.', 'assistant');
-    } finally {
-      sendButton.disabled = false;
-      input.focus();
-    }
+        body: JSON.stringify(requestBody)
   }
 
   console.log('AiCareXpert: Widget script loaded successfully');
