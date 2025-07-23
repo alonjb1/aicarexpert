@@ -609,5 +609,26 @@
     return widgetConfig;
   };
 
+  // Test function for debugging
+  window.AiCareXpert.sendTestMessage = function(message) {
+    console.log('AiCareXpert: Test function called with message:', message);
+    if (!widgetConfig.apiUrl) {
+      console.error('AiCareXpert: Widget not properly initialized');
+      return;
+    }
+    
+    // Open widget if not open
+    if (!isOpen) {
+      openWidget();
+    }
+    
+    // Set test message in input and send
+    const input = document.getElementById('aicarexpert-input');
+    if (input) {
+      input.value = message || 'Test message from debug function';
+      sendMessage();
+    }
+  };
+
   console.log('AiCareXpert: Widget script loaded successfully');
 })();
