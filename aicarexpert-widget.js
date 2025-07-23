@@ -1,95 +1,94 @@
 /**
  * AiCareXpert Widget - Healthcare AI Chatbot
- * Version 2.2 - Fixed function assignment
+ * Version 2.3 - Simplified global function assignment
  */
 
 (function() {
   'use strict';
 
-  // Widget namespace
-  window.AiCareXpert = window.AiCareXpert || {};
-
-  let widgetConfig = {};
-  let isOpen = false;
-  let sessionId = null;
-  let userId = null;
-  let messages = [];
-
-  // Initialize the widget
-  window.AiCareXpert.init = function(config) {
-    console.log('AiCareXpert: Initializing widget with config:', config);
-    
-    if (!config.tenantId || !config.assistantId || !config.apiUrl) {
-      console.error('AiCareXpert: Missing required configuration: tenantId, assistantId, or apiUrl');
-      return;
-    }
-
-    if (!config.supabaseAnonKey) {
-      console.error('AiCareXpert: Missing supabaseAnonKey - this is required for authentication');
-      return;
-    }
-
-    widgetConfig = {
-      tenantId: config.tenantId,
-      assistantId: config.assistantId,
-      apiUrl: config.apiUrl,
-      supabaseAnonKey: config.supabaseAnonKey,
-      widgetId: config.widgetId || 'aicarexpert-widget',
-      config: {
-        position: 'bottom-right',
-        primaryColor: '#2563EB',
-        secondaryColor: '#059669',
-        fontFamily: 'Inter',
-        borderRadius: '8px',
-        showWelcome: true,
-        welcomeMessage: 'Hello! How can I help you today?',
-        chatTitle: 'AI Assistant',
-        placeholder: 'Type your message...',
-        autoOpen: false,
-        collectEmail: false,
-        enableTyping: true,
-        size: 'medium',
-        ...config.config
-      }
-    };
-
-    // Generate unique user ID for this visitor
-    userId = getOrCreateUserId();
-    
-    // Create widget HTML
-    createWidget();
-    
-    // Auto-open if configured
-    if (widgetConfig.config.autoOpen) {
-      setTimeout(() => openWidget(), 1000);
-    }
-
-    console.log('AiCareXpert: Widget initialized successfully');
-    
-    // ADD TEST FUNCTIONS DIRECTLY HERE - THIS WAS THE MISSING PIECE!
-    window.AiCareXpert.sendTestMessage = function(message) {
+  // Widget namespace - IMMEDIATELY assign functions
+  window.AiCareXpert = {
+    // Add functions immediately to global scope
+    sendTestMessage: function(message) {
       console.log('AiCareXpert: Test function called with message:', message);
-      if (!widgetConfig.apiUrl) {
-        console.error('AiCareXpert: Widget not properly initialized');
+      if (!this.config) {
+        console.error('AiCareXpert: Widget not initialized');
         return;
       }
       
-      if (!isOpen) {
-        openWidget();
+      // Open widget if closed
+      const widget = document.getElementById('aicarexpert-window');
+      if (widget && !widget.classList.contains('open')) {
+        widget.classList.add('open');
       }
       
+      // Set input value and send
       const input = document.getElementById('aicarexpert-input');
       if (input) {
         input.value = message || 'Test message from debug function';
         sendMessage();
       }
-    };
+    },
 
-    window.AiCareXpert.getConfig = function() {
-      return widgetConfig;
-    };
-    
-    console.log('AiCareXpert: Test functions added successfully');
+    getConfig: function() {
+      return this.config || {};
+    },
+
+    init: function(config) {
+      console.log('AiCareXpert: Initializing widget with config:', config);
+      
+      if (!config.tenantId || !config.assistantId || !config.apiUrl) {
+        console.error('AiCareXpert: Missing required configuration: tenantId, assistantId, or apiUrl');
+        return;
+      }
+
+      if (!config.supabaseAnonKey) {
+        console.error('AiCareXpert: Missing supabaseAnonKey - this is required for authentication');
+        return;
+      }
+
+      // Store config globally
+      this.config = {
+        tenantId: config.tenantId,
+        assistantId: config.assistantId,
+        apiUrl: config.apiUrl,
+        supabaseAnonKey: config.supabaseAnonKey,
+        widgetId: config.widgetId || 'aicarexpert-widget',
+        config: {
+          position: 'bottom-right',
+          primaryColor: '#2563EB',
+          secondaryColor: '#059669',
+          fontFamily: 'Inter',
+          borderRadius: '8px',
+          showWelcome: true,
+          welcomeMessage: 'Hello! How can I help you today?',
+          chatTitle: 'AI Assistant',
+          placeholder: 'Type your message...',
+          autoOpen: false,
+          collectEmail: false,
+          enableTyping: true,
+          size: 'medium',
+          ...config.config
+        }
+      };
+
+      // Generate unique user ID for this visitor
+      this.userId = getOrCreateUserId();
+      this.sessionId = null;
+      this.isOpen = false;
+      this.messages = [];
+      
+      // Create widget HTML
+      createWidget();
+      
+      // Auto-open if configured
+      if (this.config.config.autoOpen) {
+        setTimeout(() => openWidget(), 1000);
+      }
+
+      console.log('AiCareXpert: Widget initialized successfully');
+      console.log('AiCareXpert: Test functions should now be available');
+    }
   };
 
   // Get or create user ID from localStorage
@@ -116,15 +115,17 @@
 
   // Create widget HTML
   function createWidget() {
+    const config = window.AiCareXpert.config;
+    
     // Remove existing widget if any
-    const existingWidget = document.getElementById(widgetConfig.widgetId);
+    const existingWidget = document.getElementById(config.widgetId);
     if (existingWidget) {
       existingWidget.remove();
     }
 
     // Create widget container
     const widget = document.createElement('div');
-    widget.id = widgetConfig.widgetId;
+    widget.id = config.widgetId;
     widget.innerHTML = getWidgetHTML();
     
     // Add styles
@@ -137,14 +138,15 @@
     addEventListeners();
     
     // Add welcome message if enabled
-    if (widgetConfig.config.showWelcome) {
-      addMessage(widgetConfig.config.welcomeMessage, 'assistant');
+    if (config.config.showWelcome) {
+      addMessage(config.config.welcomeMessage, 'assistant');
     }
   }
 
   // Get widget HTML
   function getWidgetHTML() {
-    const position = widgetConfig.config.position;
+    const config = window.AiCareXpert.config.config;
+    const position = config.position;
     const positionClass = `aicarexpert-${position}`;
     
     return `
@@ -158,7 +160,7 @@
         <div class="aicarexpert-chat-window" id="aicarexpert-window">
           <div class="aicarexpert-chat-header">
             <div class="aicarexpert-header-info">
-              <div class="aicarexpert-chat-title">${widgetConfig.config.chatTitle}</div>
+              <div class="aicarexpert-chat-title">${config.chatTitle}</div>
               <div class="aicarexpert-chat-subtitle">Online now</div>
             </div>
             <button class="aicarexpert-close-button" id="aicarexpert-close">
@@ -182,7 +184,7 @@
             <input 
               type="text" 
               id="aicarexpert-input" 
-              placeholder="${widgetConfig.config.placeholder}"
+              placeholder="${config.placeholder}"
             >
             <button class="aicarexpert-send-button" id="aicarexpert-send">
               <svg viewBox="0 0 24 24" width="16" height="16">
@@ -207,7 +209,7 @@
 
   // Get widget CSS
   function getWidgetCSS() {
-    const config = widgetConfig.config;
+    const config = window.AiCareXpert.config.config;
     const size = getSizeConfig(config.size);
     
     return `
@@ -463,7 +465,7 @@
 
   // Toggle widget
   function toggleWidget() {
-    if (isOpen) {
+    if (window.AiCareXpert.isOpen) {
       closeWidget();
     } else {
       openWidget();
@@ -472,12 +474,12 @@
 
   // Open widget
   function openWidget() {
-    const window = document.getElementById('aicarexpert-window');
+    const windowEl = document.getElementById('aicarexpert-window');
     const input = document.getElementById('aicarexpert-input');
     
-    if (window) {
-      window.classList.add('open');
-      isOpen = true;
+    if (windowEl) {
+      windowEl.classList.add('open');
+      window.AiCareXpert.isOpen = true;
       
       if (input) {
         setTimeout(() => input.focus(), 100);
@@ -487,11 +489,11 @@
 
   // Close widget
   function closeWidget() {
-    const window = document.getElementById('aicarexpert-window');
+    const windowEl = document.getElementById('aicarexpert-window');
     
-    if (window) {
-      window.classList.remove('open');
-      isOpen = false;
+    if (windowEl) {
+      windowEl.classList.remove('open');
+      window.AiCareXpert.isOpen = false;
     }
   }
 
@@ -508,7 +510,7 @@
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
     
     // Store message
-    messages.push({ content, role, timestamp: new Date() });
+    window.AiCareXpert.messages.push({ content, role, timestamp: new Date() });
   }
 
   // Show typing indicator
@@ -543,8 +545,10 @@
     const message = input.value.trim();
     if (!message) return;
 
+    const config = window.AiCareXpert.config;
+
     // Validate configuration
-    if (!widgetConfig.supabaseAnonKey) {
+    if (!config.supabaseAnonKey) {
       console.error('AiCareXpert: supabaseAnonKey is required but not provided');
       addMessage('Configuration error: Missing authentication key', 'assistant');
       return;
@@ -556,61 +560,46 @@
     sendButton.disabled = true;
     
     // Show typing indicator
-    if (widgetConfig.config.enableTyping) {
+    if (config.config.enableTyping) {
       showTyping();
     }
 
     try {
       console.log('AiCareXpert: Sending message to API...');
-      console.log('AiCareXpert: API URL:', widgetConfig.apiUrl);
-      console.log('AiCareXpert: Tenant ID:', widgetConfig.tenantId);
-      console.log('AiCareXpert: Assistant ID:', widgetConfig.assistantId);
-      console.log('AiCareXpert: Has supabaseAnonKey:', !!widgetConfig.supabaseAnonKey);
-      console.log('AiCareXpert: supabaseAnonKey length:', widgetConfig.supabaseAnonKey ? widgetConfig.supabaseAnonKey.length : 'undefined');
       
       const headers = {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${widgetConfig.supabaseAnonKey}`
+        'Authorization': `Bearer ${config.supabaseAnonKey}`
       };
-      
-      console.log('AiCareXpert: Request headers:', headers);
       
       const requestBody = {
         message: message,
-        tenantId: widgetConfig.tenantId,
-        assistantId: widgetConfig.assistantId,
-        sessionId: sessionId,
-        userId: userId
+        tenantId: config.tenantId,
+        assistantId: config.assistantId,
+        sessionId: window.AiCareXpert.sessionId,
+        userId: window.AiCareXpert.userId
       };
       
-      console.log('AiCareXpert: Request body:', requestBody);
-      
-      const response = await fetch(widgetConfig.apiUrl, {
+      const response = await fetch(config.apiUrl, {
         method: 'POST',
         headers: headers,
         body: JSON.stringify(requestBody)
       });
 
-      console.log('AiCareXpert: API response status:', response.status);
-      console.log('AiCareXpert: API response ok:', response.ok);
-
       hideTyping();
 
       if (response.ok) {
         const data = await response.json();
-        console.log('AiCareXpert: API response data:', data);
         
         // Update session info
-        if (data.sessionId) sessionId = data.sessionId;
-        if (data.userId) userId = data.userId;
+        if (data.sessionId) window.AiCareXpert.sessionId = data.sessionId;
+        if (data.userId) window.AiCareXpert.userId = data.userId;
         
         // Add assistant response
         addMessage(data.response, 'assistant');
       } else {
         const errorText = await response.text();
         console.error('AiCareXpert: API error response:', errorText);
-        console.error('AiCareXpert: Response status:', response.status);
-        console.error('AiCareXpert: Response headers:', [...response.headers.entries()]);
         addMessage('Sorry, I encountered an error. Please try again.', 'assistant');
       }
     } catch (error) {
@@ -623,5 +612,5 @@
     }
   }
 
-  console.log('AiCareXpert: Widget script loaded successfully');
+  console.log('AiCareXpert: Widget script loaded successfully - Version 2.3');
 })();
