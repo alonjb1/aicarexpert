@@ -1,6 +1,6 @@
 /**
  * AiCareXpert Widget - Healthcare AI Chatbot
- * Version 2.0 - With Supabase Authentication
+ * Version 2.1 - With proper test functions
  */
 
 (function() {
@@ -21,6 +21,11 @@
     
     if (!config.tenantId || !config.assistantId || !config.apiUrl) {
       console.error('AiCareXpert: Missing required configuration: tenantId, assistantId, or apiUrl');
+      return;
+    }
+
+    if (!config.supabaseAnonKey) {
+      console.error('AiCareXpert: Missing supabaseAnonKey - this is required for authentication');
       return;
     }
 
@@ -60,7 +65,43 @@
     }
 
     console.log('AiCareXpert: Widget initialized successfully');
+    
+    // Add test functions after initialization
+    addTestFunctions();
   };
+
+  // Add test functions to the global object
+  function addTestFunctions() {
+    console.log('AiCareXpert: Adding test functions...');
+    
+    // Test function for debugging
+    window.AiCareXpert.sendTestMessage = function(message) {
+      console.log('AiCareXpert: Test function called with message:', message);
+      if (!widgetConfig.apiUrl) {
+        console.error('AiCareXpert: Widget not properly initialized');
+        return;
+      }
+      
+      // Open widget if not open
+      if (!isOpen) {
+        openWidget();
+      }
+      
+      // Set test message in input and send
+      const input = document.getElementById('aicarexpert-input');
+      if (input) {
+        input.value = message || 'Test message from debug function';
+        sendMessage();
+      }
+    };
+
+    // Debug function to get current config
+    window.AiCareXpert.getConfig = function() {
+      return widgetConfig;
+    };
+    
+    console.log('AiCareXpert: Test functions added. Available methods:', Object.keys(window.AiCareXpert));
+  }
 
   // Get or create user ID from localStorage
   function getOrCreateUserId() {
@@ -513,6 +554,13 @@
     const message = input.value.trim();
     if (!message) return;
 
+    // Validate configuration
+    if (!widgetConfig.supabaseAnonKey) {
+      console.error('AiCareXpert: supabaseAnonKey is required but not provided');
+      addMessage('Configuration error: Missing authentication key', 'assistant');
+      return;
+    }
+
     // Add user message
     addMessage(message, 'user');
     input.value = '';
@@ -525,15 +573,11 @@
 
     try {
       console.log('AiCareXpert: Sending message to API...');
-      console.log('AiCareXpert: Full widgetConfig:', widgetConfig);
-      console.log('AiCareXpert: supabaseAnonKey exists:', !!widgetConfig.supabaseAnonKey);
+      console.log('AiCareXpert: API URL:', widgetConfig.apiUrl);
+      console.log('AiCareXpert: Tenant ID:', widgetConfig.tenantId);
+      console.log('AiCareXpert: Assistant ID:', widgetConfig.assistantId);
+      console.log('AiCareXpert: Has supabaseAnonKey:', !!widgetConfig.supabaseAnonKey);
       console.log('AiCareXpert: supabaseAnonKey length:', widgetConfig.supabaseAnonKey ? widgetConfig.supabaseAnonKey.length : 'undefined');
-      console.log('AiCareXpert: supabaseAnonKey first 20 chars:', widgetConfig.supabaseAnonKey ? widgetConfig.supabaseAnonKey.substring(0, 20) : 'undefined');
-      
-      // Validate required config
-      if (!widgetConfig.supabaseAnonKey) {
-        throw new Error('Supabase anon key is required for authentication');
-      }
       
       const headers = {
         'Content-Type': 'application/json',
@@ -541,7 +585,6 @@
       };
       
       console.log('AiCareXpert: Request headers:', headers);
-      console.log('AiCareXpert: Authorization header:', headers.Authorization);
       
       const requestBody = {
         message: message,
@@ -553,7 +596,6 @@
       
       console.log('AiCareXpert: Request body:', requestBody);
       
-      console.log('AiCareXpert: Making fetch request to:', widgetConfig.apiUrl);
       const response = await fetch(widgetConfig.apiUrl, {
         method: 'POST',
         headers: headers,
@@ -561,7 +603,7 @@
       });
 
       console.log('AiCareXpert: API response status:', response.status);
-      console.log('AiCareXpert: API response headers:', [...response.headers.entries()]);
+      console.log('AiCareXpert: API response ok:', response.ok);
 
       hideTyping();
 
@@ -578,9 +620,9 @@
       } else {
         const errorText = await response.text();
         console.error('AiCareXpert: API error response:', errorText);
-        console.error('AiCareXpert: Full response object:', response);
+        console.error('AiCareXpert: Response status:', response.status);
+        console.error('AiCareXpert: Response headers:', [...response.headers.entries()]);
         addMessage('Sorry, I encountered an error. Please try again.', 'assistant');
-        throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
     } catch (error) {
       console.error('AiCareXpert: Chat error:', error);
@@ -591,44 +633,6 @@
       input.focus();
     }
   }
-
-  // Test function for debugging
-  window.AiCareXpert.sendTestMessage = function(message) {
-    console.log('AiCareXpert: Test function called with message:', message);
-    if (!widgetConfig.apiUrl) {
-      console.error('AiCareXpert: Widget not properly initialized');
-      return;
-    }
-    
-    // Simulate sending a message
-    sendMessage();
-  };
-
-  // Debug function to get current config
-  window.AiCareXpert.getConfig = function() {
-    return widgetConfig;
-  };
-
-  // Test function for debugging
-  window.AiCareXpert.sendTestMessage = function(message) {
-    console.log('AiCareXpert: Test function called with message:', message);
-    if (!widgetConfig.apiUrl) {
-      console.error('AiCareXpert: Widget not properly initialized');
-      return;
-    }
-    
-    // Open widget if not open
-    if (!isOpen) {
-      openWidget();
-    }
-    
-    // Set test message in input and send
-    const input = document.getElementById('aicarexpert-input');
-    if (input) {
-      input.value = message || 'Test message from debug function';
-      sendMessage();
-    }
-  };
 
   console.log('AiCareXpert: Widget script loaded successfully');
 })();
