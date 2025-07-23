@@ -525,12 +525,12 @@
 
     try {
       console.log('AiCareXpert: Sending message to API...');
-      console.log('AiCareXpert: API URL:', widgetConfig.apiUrl);
-      console.log('AiCareXpert: Tenant ID:', widgetConfig.tenantId);
-      console.log('AiCareXpert: Assistant ID:', widgetConfig.assistantId);
-      console.log('AiCareXpert: Supabase Key available:', !!widgetConfig.supabaseAnonKey);
+      console.log('AiCareXpert: Full widgetConfig:', widgetConfig);
+      console.log('AiCareXpert: supabaseAnonKey exists:', !!widgetConfig.supabaseAnonKey);
+      console.log('AiCareXpert: supabaseAnonKey length:', widgetConfig.supabaseAnonKey ? widgetConfig.supabaseAnonKey.length : 'undefined');
+      console.log('AiCareXpert: supabaseAnonKey first 20 chars:', widgetConfig.supabaseAnonKey ? widgetConfig.supabaseAnonKey.substring(0, 20) : 'undefined');
       
-      // Build headers - Authorization is REQUIRED based on our tests
+      // Validate required config
       if (!widgetConfig.supabaseAnonKey) {
         throw new Error('Supabase anon key is required for authentication');
       }
@@ -540,7 +540,8 @@
         'Authorization': `Bearer ${widgetConfig.supabaseAnonKey}`
       };
       
-      console.log('AiCareXpert: Using headers:', headers);
+      console.log('AiCareXpert: Request headers:', headers);
+      console.log('AiCareXpert: Authorization header:', headers.Authorization);
       
       const requestBody = {
         message: message,
@@ -552,6 +553,7 @@
       
       console.log('AiCareXpert: Request body:', requestBody);
       
+      console.log('AiCareXpert: Making fetch request to:', widgetConfig.apiUrl);
       const response = await fetch(widgetConfig.apiUrl, {
         method: 'POST',
         headers: headers,
@@ -559,10 +561,36 @@
       });
 
       console.log('AiCareXpert: API response status:', response.status);
+      console.log('AiCareXpert: API response headers:', [...response.headers.entries()]);
 
       hideTyping();
 
       if (response.ok) {
         const data = await response.json();
+        console.log('AiCareXpert: API response data:', data);
+        
+        // Update session info
+        if (data.sessionId) sessionId = data.sessionId;
+        if (data.userId) userId = data.userId;
+        
+        // Add assistant response
+        addMessage(data.response, 'assistant');
+      } else {
+        const errorText = await response.text();
+        console.error('AiCareXpert: API error response:', errorText);
+        console.error('AiCareXpert: Full response object:', response);
+        addMessage('Sorry, I encountered an error. Please try again.', 'assistant');
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+    } catch (error) {
+      console.error('AiCareXpert: Chat error:', error);
+      hideTyping();
+      addMessage('Sorry, I encountered an error. Please try again.', 'assistant');
+    } finally {
+      sendButton.disabled = false;
+      input.focus();
+    }
+  }
+
   console.log('AiCareXpert: Widget script loaded successfully');
 })();
