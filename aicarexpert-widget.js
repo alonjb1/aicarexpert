@@ -1,6 +1,6 @@
 /**
  * AiCareXpert Widget - Healthcare AI Chatbot
- * Version 2.1 - With proper test functions
+ * Version 2.2 - Fixed function assignment
  */
 
 (function() {
@@ -66,15 +66,7 @@
 
     console.log('AiCareXpert: Widget initialized successfully');
     
-    // Add test functions after initialization
-    addTestFunctions();
-  };
-
-  // Add test functions to global object
-  function addTestFunctions() {
-    console.log('AiCareXpert: Adding test functions...');
-    
-    // Test function for debugging
+    // ADD TEST FUNCTIONS DIRECTLY HERE - THIS WAS THE MISSING PIECE!
     window.AiCareXpert.sendTestMessage = function(message) {
       console.log('AiCareXpert: Test function called with message:', message);
       if (!widgetConfig.apiUrl) {
@@ -82,12 +74,10 @@
         return;
       }
       
-      // Open widget if not open
       if (!isOpen) {
         openWidget();
       }
       
-      // Set test message in input and send
       const input = document.getElementById('aicarexpert-input');
       if (input) {
         input.value = message || 'Test message from debug function';
@@ -95,14 +85,12 @@
       }
     };
 
-    // Debug function to get current config
     window.AiCareXpert.getConfig = function() {
       return widgetConfig;
     };
     
     console.log('AiCareXpert: Test functions added successfully');
-    console.log('AiCareXpert: Available methods after adding functions:', Object.keys(window.AiCareXpert));
-  }
+  };
 
   // Get or create user ID from localStorage
   function getOrCreateUserId() {
