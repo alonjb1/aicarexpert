@@ -417,7 +417,6 @@ window.AiCareXpert = {
             box-shadow: 0 4px 8px rgba(0,0,0,0.3); /* More pronounced shadow */
           }
         </style>
-        </button>
         
         <!-- Chat Window -->
         <div id="${this.config.widgetId}-window" style="
@@ -741,14 +740,9 @@ window.AiCareXpert = {
           this.sessionId = data.sessionId;
           console.log('🔄 AiCareXpert: Session ID updated:', this.sessionId);
           
-          // Load lead forms after session is established
-          if (this.leadForms.length === 0) {
-            this.loadLeadForms();
-          }
-          
-          // Load lead forms after session is established
-          if (this.leadForms.length === 0) {
-            this.loadLeadForms();
+          // Load lead forms after session is established (only once)
+          if (this.leadForms.length === 0 && this.config.config.enableLeadForms) {
+            await this.loadLeadForms();
           }
         }
         if (data.userId) {
@@ -759,11 +753,20 @@ window.AiCareXpert = {
         // Add assistant response
         this.addMessage(data.response, 'assistant');
         
-        // Show lead buttons after assistant response (if enabled and forms available)
-        if (this.config.config.enableLeadForms && this.leadForms.length > 0) {
-          setTimeout(() => {
-            this.updateLeadButtons();
-          }, 1000);
+        // Show lead buttons after assistant response
+        if (this.config.config.enableLeadForms) {
+          // If forms aren't loaded yet, load them first
+          if (this.leadForms.length === 0) {
+            await this.loadLeadForms();
+          }
+          
+          // Then show buttons if we have forms
+          if (this.leadForms.length > 0) {
+            console.log('📋 AiCareXpert: Showing lead buttons after assistant response');
+            setTimeout(() => {
+              this.updateLeadButtons();
+            }, 500);
+          }
         }
         
         console.log('✅ AiCareXpert: Assistant response added to chat');
@@ -782,6 +785,140 @@ window.AiCareXpert = {
       sendButton.style.cursor = 'pointer';
       input.focus();
       console.log('🔄 AiCareXpert: Send button re-enabled');
+    }
+  },
+  
+  updateLeadButtons: function() {
+    console.log('📋 AiCareXpert: updateLeadButtons called');
+    console.log('📋 AiCareXpert: enableLeadForms:', this.config.config.enableLeadForms);
+    console.log('📋 AiCareXpert: leadForms count:', this.leadForms.length);
+    
+    // Show buttons if lead forms are enabled and we have forms
+    if (!this.config.config.enableLeadForms) {
+      console.log('🚫 AiCareXpert: Lead forms disabled in config');
+      return;
+    }
+    
+    if (!this.leadForms || this.leadForms.length === 0) {
+      console.log('🚫 AiCareXpert: No lead forms available');
+      return;
+    }
+    
+    console.log('📋 AiCareXpert: Updating lead buttons, forms available:', this.leadForms.length);
+    
+    const messagesContainer = document.getElementById(this.config.widgetId + '-messages');
+    if (!messagesContainer) {
+      console.error('❌ AiCareXpert: Messages container not found');
+      return;
+    }
+    
+    // Remove existing lead buttons
+    const existingButtons = messagesContainer.querySelector('.lead-buttons-container');
+    if (existingButtons) {
+      existingButtons.remove();
+      console.log('🗑️ AiCareXpert: Removed existing lead buttons');
+    }
+    
+    // Create lead buttons container
+    const buttonsContainer = document.createElement('div');
+    buttonsContainer.className = 'lead-buttons-container';
+    buttonsContainer.style.cssText = `
+      margin: 12px 0;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    `;
+    
+    // Add buttons for each selected and active lead form
+    let buttonsAdded = 0;
+    this.leadForms.forEach(form => {
+      console.log('➕ AiCareXpert: Adding button for form:', form.name);
+      const button = document.createElement('button');
+      button.textContent = form.button_text;
+      button.className = 'aicarexpert-lead-button';
+      button.onclick = () => this.showLeadForm(form);
+      button.style.cssText = `
+        background: ${this.config.config.secondaryColor || '#059669'};
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        flex-shrink: 1;
+        flex-grow: 0;
+        white-space: nowrap;
+      `;
+      
+      buttonsContainer.appendChild(button);
+      buttonsAdded++;
+    });
+    
+    if (buttonsAdded > 0) {
+      // Add to messages container
+      messagesContainer.appendChild(buttonsContainer);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      console.log(`✅ AiCareXpert: ${buttonsAdded} lead buttons added to chat`);
+    } else {
+      console.log('❌ AiCareXpert: No buttons were added');
+    }
+  },
+  
+  loadLeadForms: async function() {
+    try {
+      console.log('📋 AiCareXpert: Loading lead forms...');
+      
+      if (!this.config.apiUrl) {
+        console.error('❌ AiCareXpert: No API URL configured');
+        return;
+      }
+      
+      const baseUrl = this.config.apiUrl.replace('/widget-chat-v2', '');
+      const leadFormsUrl = `${baseUrl}/get-lead-forms`;
+      
+      console.log('📋 AiCareXpert: Fetching from:', leadFormsUrl);
+      
+      const response = await fetch(leadFormsUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.config.supabaseAnonKey}`,
+          'apikey': this.config.supabaseAnonKey
+        },
+        body: JSON.stringify({
+          tenantId: this.config.tenantId
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        const allForms = data.forms || [];
+        console.log('📋 AiCareXpert: Received forms from server:', allForms.length);
+        
+        // Only show forms that are enabled and selected in the Design Center
+        if (this.config.config.enableLeadForms && this.config.config.selectedLeadForms) {
+          this.leadForms = allForms.filter(form => 
+            form.is_active && this.config.config.selectedLeadForms.includes(form.id)
+          );
+          console.log('📋 AiCareXpert: Filtered to selected forms:', this.leadForms.length);
+          console.log('📋 AiCareXpert: Selected form IDs:', this.config.config.selectedLeadForms);
+        } else {
+          // If no specific forms selected, show all active forms
+          this.leadForms = allForms.filter(form => form.is_active);
+          console.log('📋 AiCareXpert: Using all active forms:', this.leadForms.length);
+        }
+        
+        console.log('✅ AiCareXpert: Lead forms loaded:', this.leadForms.length);
+      } else {
+        console.warn('⚠️ AiCareXpert: Failed to load lead forms, status:', response.status);
+        const errorText = await response.text();
+        console.warn('⚠️ AiCareXpert: Error details:', errorText);
+      }
+    } catch (error) {
+      console.error('❌ AiCareXpert: Error loading lead forms:', error);
     }
   }
 };
