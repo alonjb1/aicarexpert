@@ -101,11 +101,13 @@ window.AiCareXpert = {
     // Create lead buttons container
     const buttonsContainer = document.createElement('div');
     buttonsContainer.className = 'lead-buttons-container';
+    // Changed to flex-wrap and justify-content for better layout and responsiveness
     buttonsContainer.style.cssText = `
       margin: 12px 0;
       display: flex;
-      flex-direction: column;
-      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center; /* Center buttons if they don't fill the width */
+      gap: 10px; /* Spacing between buttons */
     `;
     
     // Add buttons for each selected and active lead form
@@ -113,6 +115,8 @@ window.AiCareXpert = {
       console.log('➕ AiCareXpert: Adding button for form:', form.name);
       const button = document.createElement('button');
       button.textContent = form.button_text;
+      // Added a class for easier styling and hover effects
+      button.className = 'aicarexpert-lead-button';
       button.onclick = () => this.showLeadForm(form);
       button.style.cssText = `
         background: ${this.config.config.secondaryColor || '#059669'};
@@ -120,16 +124,17 @@ window.AiCareXpert = {
         border: none;
         padding: 8px 16px;
         border-radius: 6px;
+        padding: 10px 20px; /* Slightly more padding */
+        border-radius: 20px; /* More rounded, pill-like */
         cursor: pointer;
         font-size: 13px;
+        font-size: 14px; /* Slightly larger font */
         transition: background 0.2s;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* Subtle shadow */
+        flex-shrink: 1; /* Allow shrinking */
+        flex-grow: 0; /* Prevent growing to fill space */
+        white-space: nowrap; /* Prevent text wrapping */
       `;
-      button.onmouseover = function() {
-        this.style.background = '#047857';
-      };
-      button.onmouseout = function() {
-        this.style.background = window.AiCareXpert.config.config.secondaryColor || '#059669';
-      };
       
       buttonsContainer.appendChild(button);
     });
@@ -245,11 +250,14 @@ window.AiCareXpert = {
       background: ${this.config.config.primaryColor || '#2563EB'};
       color: white;
       border: none;
-      padding: 8px 16px;
-      border-radius: 4px;
+      padding: 10px 16px; /* Adjusted padding */
+      border-radius: 6px; /* Slightly more rounded */
       cursor: pointer;
       font-size: 13px;
-      flex: 1;
+      flex-grow: 1; /* Allow to grow */
+      min-width: 120px; /* Prevent from becoming too small */
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Subtle shadow */
+      transition: all 0.2s ease; /* Smooth transition */
     `;
     
     // Cancel button
@@ -261,11 +269,14 @@ window.AiCareXpert = {
       background: #6b7280;
       color: white;
       border: none;
-      padding: 8px 16px;
-      border-radius: 4px;
+      padding: 10px 16px; /* Adjusted padding */
+      border-radius: 6px; /* Slightly more rounded */
       cursor: pointer;
       font-size: 13px;
-      flex: 1;
+      flex-grow: 1; /* Allow to grow */
+      min-width: 120px; /* Prevent from becoming too small */
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Subtle shadow */
+      transition: all 0.2s ease; /* Smooth transition */
     `;
     
     buttonContainer.appendChild(submitButton);
@@ -396,6 +407,16 @@ window.AiCareXpert = {
           font-size: 24px;
         " onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
           💬
+        </button>
+        
+        <style>
+          /* Hover effects for lead buttons */
+          .aicarexpert-lead-button:hover {
+            background: #047857 !important; /* Darker shade for hover */
+            transform: translateY(-1px); /* Slight lift */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3); /* More pronounced shadow */
+          }
+        </style>
         </button>
         
         <!-- Chat Window -->
